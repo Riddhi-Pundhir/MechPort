@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MechPort Control Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- MechPort Laptop Control Dashboard (Phase 4 Foundation) -->
+  <div id="app">
+    <header class="header">
+      <h1>MechPort Control Center</h1>
+      <div class="status-bar">
+        <span id="rpi-status" class="status-badge status-offline">Raspberry Pi: Disconnected</span>
+        <span id="cam-status" class="status-badge status-offline">ESP32-CAM: Disconnected</span>
+      </div>
+    </header>
+
+    <main class="main-container">
+      <section class="video-container">
+        <h2>Live Video Feed</h2>
+        <div id="video-wrapper" class="video-wrapper">
+          <p class="placeholder-text">Camera stream will appear here in Phase 4</p>
+        </div>
+      </section>
+
+      <section class="controls-container">
+        <h2>Vehicle Controls</h2>
+        <div class="motor-state-display">
+          Current State: <strong id="current-state">STOP</strong>
+        </div>
+        
+        <div class="dpad-grid">
+          <button id="btn-forward" class="btn btn-ctrl">▲<br>FORWARD (W)</button>
+          <div class="dpad-middle">
+            <button id="btn-left" class="btn btn-ctrl">◀ LEFT (A)</button>
+            <button id="btn-stop" class="btn btn-stop">■ STOP (SPACE)</button>
+            <button id="btn-right" class="btn btn-ctrl">RIGHT (D) ▶</button>
+          </div>
+          <button id="btn-backward" class="btn btn-ctrl">▼<br>BACKWARD (S)</button>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

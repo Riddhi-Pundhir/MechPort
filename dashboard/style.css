@@ -1,0 +1,111 @@
+/* MechPort Dashboard Styling (Phase 4 Foundation) */
+:root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent-cyan: #06b6d4;
+  --color-stop: #ef4444;
+  --color-online: #10b981;
+  --color-offline: #64748b;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  padding: 1.5rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #334155;
+}
+
+.status-badge {
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.status-offline {
+  background-color: rgba(100, 116, 139, 0.2);
+  color: var(--color-offline);
+  border: 1px solid var(--color-offline);
+}
+
+.status-online {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: var(--color-online);
+  border: 1px solid var(--color-online);
+}
+
+.main-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.video-wrapper {
+  background-color: var(--bg-secondary);
+  border-radius: 0.75rem;
+  height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #475569;
+}
+
+.placeholder-text {
+  color: var(--text-muted);
+}
+
+.controls-container {
+  background-color: var(--bg-secondary);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.motor-state-display {
+  margin: 1rem 0;
+  font-size: 1.1rem;
+}
+
+.dpad-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dpad-middle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn {
+  background-color: #334155;
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 1rem 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  min-width: 110px;
+}
+
+.btn-stop {
+  background-color: var(--color-stop);
+}
