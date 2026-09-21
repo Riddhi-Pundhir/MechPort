@@ -3,46 +3,426 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MechPort Control Dashboard</title>
+  <title>MechPort - Tech-Punk Robotics Control Center</title>
+  <meta name="description" content="Futuristic robotics telemetry and driving dashboard for MechPort robotic car with live ESP32-CAM stream.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- MechPort Laptop Control Dashboard (Phase 4 Foundation) -->
-  <div id="app">
-    <header class="header">
-      <h1>MechPort Control Center</h1>
-      <div class="status-bar">
-        <span id="rpi-status" class="status-badge status-offline">Raspberry Pi: Disconnected</span>
-        <span id="cam-status" class="status-badge status-offline">ESP32-CAM: Disconnected</span>
+  <div class="app-layout">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav" role="banner">
+      <div class="nav-brand">
+        <div class="brand-badge">
+          <span class="brand-glitch">MP</span>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">MECHPORT</span>
+          <span class="brand-sub">TACTICAL ROBOTICS OS</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs" aria-label="Main Navigation">
+        <a href="#section-dashboard" class="nav-tab active" data-target="section-dashboard">Dashboard</a>
+        <a href="#section-controls" class="nav-tab" data-target="section-controls">Controls</a>
+        <a href="#section-camera" class="nav-tab" data-target="section-camera">Camera</a>
+        <a href="#section-status" class="nav-tab" data-target="section-status">Status</a>
+        <a href="#section-settings" class="nav-tab" data-target="section-settings">Settings</a>
+        <a href="#section-help" class="nav-tab" data-target="section-help">Help</a>
+      </nav>
+
+      <!-- Client-side Search Field -->
+      <div class="nav-search-container">
+        <div class="search-input-wrapper">
+          <span class="search-icon">⌕</span>
+          <input 
+            type="text" 
+            id="search-input" 
+            class="search-input" 
+            placeholder="Quick jump (e.g. camera, controls)..." 
+            autocomplete="off" 
+            spellcheck="false"
+            aria-label="Search dashboard sections"
+          >
+          <kbd class="search-shortcut">ESC</kbd>
+        </div>
+        <div id="search-dropdown" class="search-dropdown hidden" role="listbox"></div>
       </div>
     </header>
 
-    <main class="main-container">
-      <section class="video-container">
-        <h2>Live Video Feed</h2>
-        <div id="video-wrapper" class="video-wrapper">
-          <p class="placeholder-text">Camera stream will appear here in Phase 4</p>
+    <!-- Top Status Cards Row -->
+    <section id="section-dashboard" class="status-cards-row" aria-label="System Telemetry Overview">
+      <!-- Card 1: Raspberry Pi -->
+      <div class="status-card" id="badge-rpi">
+        <div class="status-card-header">
+          <span class="status-card-title">RASPBERRY PI</span>
+          <span class="status-dot offline" id="dot-rpi"></span>
+        </div>
+        <div class="status-card-main">
+          <span class="status-primary-value" id="val-rpi-status">Disconnected</span>
+          <span class="mode-pill" id="val-rpi-mode">OFFLINE</span>
+        </div>
+        <div class="status-card-footer">
+          <span>Target: <code id="telem-api-url">http://127.0.0.1:5000</code></span>
+        </div>
+      </div>
+
+      <!-- Card 2: ESP32-CAM -->
+      <div class="status-card" id="badge-cam">
+        <div class="status-card-header">
+          <span class="status-card-title">ESP32-CAM VIDEO</span>
+          <span class="status-dot offline" id="dot-cam"></span>
+        </div>
+        <div class="status-card-main">
+          <span class="status-primary-value" id="val-cam-status">Offline</span>
+          <span class="mode-pill pill-cam">MJPEG</span>
+        </div>
+        <div class="status-card-footer">
+          <span class="truncate-text" id="display-cam-url">http://192.168.1.50:81/stream</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Watchdog Safety -->
+      <div class="status-card" id="badge-watchdog">
+        <div class="status-card-header">
+          <span class="status-card-title">SAFETY WATCHDOG</span>
+          <span class="status-dot active" id="dot-watchdog"></span>
+        </div>
+        <div class="status-card-main">
+          <span class="status-primary-value" id="val-watchdog">1.5s</span>
+          <span class="mode-pill pill-safe">ARMED</span>
+        </div>
+        <div class="status-card-footer">
+          <span id="telem-watchdog-time">1.5s remaining</span>
+        </div>
+      </div>
+
+      <!-- Card 4: System Clock & Session -->
+      <div class="status-card status-card-clock">
+        <div class="status-card-header">
+          <span class="status-card-title">LOCAL SYSTEM TIME</span>
+          <span class="clock-sync-dot"></span>
+        </div>
+        <div class="status-card-main">
+          <span class="status-primary-value font-mono" id="clock-time">--:--:--</span>
+          <span class="mode-pill pill-purple">ONLINE</span>
+        </div>
+        <div class="status-card-footer">
+          <span>Session: <strong id="session-uptime">00:00:00</strong></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Notification Toast Banner -->
+    <div id="toast-banner" class="toast-banner hidden" role="alert">
+      <span class="toast-icon">⚠</span>
+      <span id="toast-message">Notification message</span>
+      <button id="btn-dismiss-toast" class="toast-close" aria-label="Close notification">&times;</button>
+    </div>
+
+    <!-- Main Content: Left (Camera) / Right (Controls) -->
+    <div class="main-split-grid">
+      <!-- LEFT: Camera Stream Section -->
+      <section id="section-camera" class="panel camera-panel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <span class="panel-icon">📹</span>
+            <h2 class="panel-title">LIVE CAMERA STREAM</h2>
+            <span class="live-pill" id="live-indicator">LIVE FEED</span>
+          </div>
+          <div class="panel-header-actions">
+            <button id="btn-refresh-stream" class="tech-btn tech-btn-sm" title="Reload Video Stream">
+              ↻ Refresh Stream
+            </button>
+          </div>
+        </div>
+
+        <div class="camera-viewport-frame" id="video-viewport">
+          <div class="viewport-hud-top">
+            <span class="hud-tag">STREAM: CAM_01</span>
+            <span class="hud-tag font-mono" id="hud-timestamp">00:00:00</span>
+          </div>
+
+          <!-- Video Stream Image -->
+          <img id="cam-stream-img" class="cam-stream-img hidden" alt="Live ESP32-CAM Stream">
+
+          <!-- Offline Tech Placeholder -->
+          <div id="cam-placeholder" class="cam-offline-placeholder">
+            <div class="reticle-sweep"></div>
+            <div class="reticle-corners">
+              <span class="corner top-left"></span>
+              <span class="corner top-right"></span>
+              <span class="corner bottom-left"></span>
+              <span class="corner bottom-right"></span>
+            </div>
+            <div class="placeholder-hud-content">
+              <div class="hud-alert-badge">FEED OFFLINE</div>
+              <h3 class="placeholder-title">ESP32-CAM STREAM STANDBY</h3>
+              <p id="cam-placeholder-text" class="placeholder-desc">
+                Waiting for video stream signal on local Wi-Fi hotspot.
+              </p>
+              <button id="btn-connect-cam" class="tech-btn tech-btn-lavender tech-btn-sm">
+                Connect Stream
+              </button>
+            </div>
+          </div>
+
+          <div class="viewport-hud-bottom">
+            <span>AI-THINKER ESP32-CAM</span>
+            <span>MJPEG OVER HTTP</span>
+          </div>
+        </div>
+
+        <div class="panel-footer camera-footer">
+          <span>Active Endpoint: <strong id="cam-footer-url" class="font-mono">http://192.168.1.50:81/stream</strong></span>
+          <span class="feed-badge">RESOLUTION: 320x240 / 640x480</span>
         </div>
       </section>
 
-      <section class="controls-container">
-        <h2>Vehicle Controls</h2>
-        <div class="motor-state-display">
-          Current State: <strong id="current-state">STOP</strong>
-        </div>
-        
-        <div class="dpad-grid">
-          <button id="btn-forward" class="btn btn-ctrl">▲<br>FORWARD (W)</button>
-          <div class="dpad-middle">
-            <button id="btn-left" class="btn btn-ctrl">◀ LEFT (A)</button>
-            <button id="btn-stop" class="btn btn-stop">■ STOP (SPACE)</button>
-            <button id="btn-right" class="btn btn-ctrl">RIGHT (D) ▶</button>
+      <!-- RIGHT: Vehicle Controls Section -->
+      <section id="section-controls" class="panel controls-panel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <span class="panel-icon">🕹</span>
+            <h2 class="panel-title">VEHICLE CONTROLS</h2>
           </div>
-          <button id="btn-backward" class="btn btn-ctrl">▼<br>BACKWARD (S)</button>
+          <div class="keyboard-badge" title="Physical keyboard driving active">
+            <span>⌨ W/A/S/D + SPACE</span>
+          </div>
+        </div>
+
+        <!-- Current Motor State Banner -->
+        <div class="state-banner-wrapper">
+          <div class="state-banner state-stop" id="state-banner">
+            <div class="state-banner-header">
+              <span class="state-label-tag">MOTOR STATUS</span>
+              <span class="state-telemetry-pill font-mono" id="telem-hw-mode">MOCK MODE</span>
+            </div>
+            <div class="state-readout font-mono" id="state-readout">STOP</div>
+          </div>
+        </div>
+
+        <!-- Speed Slider Control -->
+        <div class="speed-panel">
+          <div class="speed-header">
+            <label for="speed-slider" class="speed-label">PWM THROTTLE SPEED</label>
+            <span class="speed-percentage font-mono" id="speed-display">80%</span>
+          </div>
+          <div class="slider-wrapper">
+            <input 
+              type="range" 
+              id="speed-slider" 
+              class="tech-slider" 
+              min="20" 
+              max="100" 
+              value="80" 
+              step="5"
+              aria-label="Motor Speed PWM Percentage"
+            >
+          </div>
+          <div class="speed-ticks">
+            <span>MIN (20%)</span>
+            <span>CRUISE (50%)</span>
+            <span>STANDARD (80%)</span>
+            <span>MAX (100%)</span>
+          </div>
+        </div>
+
+        <!-- Tactical D-Pad Driving Grid -->
+        <div class="dpad-grid" role="group" aria-label="Directional Vehicle Controls">
+          <div class="dpad-row">
+            <button id="btn-forward" class="ctrl-btn ctrl-forward" data-command="FORWARD" aria-label="Drive Forward (Key: W)">
+              <span class="ctrl-arrow">▲</span>
+              <span class="ctrl-label">FORWARD</span>
+              <kbd class="ctrl-key">W</kbd>
+            </button>
+          </div>
+
+          <div class="dpad-row dpad-middle">
+            <button id="btn-left" class="ctrl-btn ctrl-left" data-command="LEFT" aria-label="Turn Left (Key: A)">
+              <span class="ctrl-arrow">◀</span>
+              <span class="ctrl-label">LEFT</span>
+              <kbd class="ctrl-key">A</kbd>
+            </button>
+
+            <!-- Prominent Neon Emergency STOP Button -->
+            <button id="btn-stop" class="ctrl-btn ctrl-stop" data-command="STOP" aria-label="Emergency Stop (Key: Space)">
+              <span class="stop-icon">■</span>
+              <span class="stop-label">STOP</span>
+              <kbd class="ctrl-key stop-key">SPACE</kbd>
+            </button>
+
+            <button id="btn-right" class="ctrl-btn ctrl-right" data-command="RIGHT" aria-label="Turn Right (Key: D)">
+              <span class="ctrl-arrow">▶</span>
+              <span class="ctrl-label">RIGHT</span>
+              <kbd class="ctrl-key">D</kbd>
+            </button>
+          </div>
+
+          <div class="dpad-row">
+            <button id="btn-backward" class="ctrl-btn ctrl-backward" data-command="BACKWARD" aria-label="Drive Backward (Key: S)">
+              <span class="ctrl-arrow">▼</span>
+              <span class="ctrl-label">BACKWARD</span>
+              <kbd class="ctrl-key">S</kbd>
+            </button>
+          </div>
+        </div>
+
+        <!-- Watchdog Safety Information Banner -->
+        <div class="safety-banner">
+          <span class="safety-shield">🛡</span>
+          <div class="safety-text">
+            <strong>Active Safety Watchdog:</strong> Motors halt automatically within 1.5 seconds if network commands cease. Press <code>SPACE</code> or click <strong>STOP</strong> at any time.
+          </div>
         </div>
       </section>
-    </main>
+    </div>
+
+    <!-- Bottom Sections: Quick Configuration & System Status -->
+    <div class="bottom-split-grid">
+      <!-- Quick Configuration Panel -->
+      <section id="section-settings" class="panel settings-panel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <span class="panel-icon">⚙</span>
+            <h2 class="panel-title">QUICK CONFIGURATION</h2>
+          </div>
+          <span class="panel-tag">LOCAL STORAGE</span>
+        </div>
+        <p class="panel-desc">
+          Configure local device IP endpoints without code changes. Saved automatically to your browser session.
+        </p>
+
+        <form id="config-form" class="config-form-grid" onsubmit="return false;">
+          <div class="form-field">
+            <label for="input-rpi-url" class="field-label">Raspberry Pi API Base URL</label>
+            <div class="field-input-wrapper">
+              <input 
+                type="text" 
+                id="input-rpi-url" 
+                class="tech-input font-mono" 
+                placeholder="http://127.0.0.1:5000" 
+                spellcheck="false" 
+                autocomplete="off"
+              >
+            </div>
+            <span class="field-hint">e.g. http://192.168.1.100:5000 or http://localhost:5000</span>
+          </div>
+
+          <div class="form-field">
+            <label for="input-cam-url" class="field-label">ESP32-CAM Stream URL</label>
+            <div class="field-input-wrapper">
+              <input 
+                type="text" 
+                id="input-cam-url" 
+                class="tech-input font-mono" 
+                placeholder="http://192.168.1.50:81/stream" 
+                spellcheck="false" 
+                autocomplete="off"
+              >
+            </div>
+            <span class="field-hint">e.g. http://192.168.1.50:81/stream</span>
+          </div>
+
+          <div class="form-button-row">
+            <button type="button" id="btn-save-config" class="tech-btn tech-btn-lavender">
+              Save & Connect
+            </button>
+            <button type="button" id="btn-reset-config" class="tech-btn tech-btn-outline">
+              Reset Defaults
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- System Status Telemetry Panel -->
+      <section id="section-status" class="panel status-panel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <span class="panel-icon">📊</span>
+            <h2 class="panel-title">SYSTEM TELEMETRY STATUS</h2>
+          </div>
+          <span class="panel-tag font-mono">REAL-TIME</span>
+        </div>
+
+        <div class="telemetry-table-wrapper">
+          <table class="telemetry-grid-table">
+            <tbody>
+              <tr>
+                <td class="telem-key">Raspberry Pi API</td>
+                <td class="telem-val font-mono" id="telem-summary-url">http://127.0.0.1:5000</td>
+              </tr>
+              <tr>
+                <td class="telem-key">Motor Driver State</td>
+                <td class="telem-val"><span id="telem-summary-state" class="badge-tag tag-purple">STOP</span></td>
+              </tr>
+              <tr>
+                <td class="telem-key">PWM Throttle Level</td>
+                <td class="telem-val font-mono" id="telem-summary-speed">80%</td>
+              </tr>
+              <tr>
+                <td class="telem-key">Safety Watchdog Timer</td>
+                <td class="telem-val font-mono" id="telem-summary-watchdog">1.5s (Armed)</td>
+              </tr>
+              <tr>
+                <td class="telem-key">Hardware Engine</td>
+                <td class="telem-val"><span id="telem-summary-hw" class="badge-tag tag-cyan">MOCK MODE</span></td>
+              </tr>
+              <tr>
+                <td class="telem-key">CORS & Security</td>
+                <td class="telem-val font-mono text-green">RESTRICTED_LOCAL_NETWORK</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- Help & Shortcuts Section -->
+    <section id="section-help" class="panel help-panel">
+      <div class="panel-header">
+        <div class="panel-title-group">
+          <span class="panel-icon">⌨</span>
+          <h2 class="panel-title">KEYBOARD SHORTCUTS & DRIVING GUIDE</h2>
+        </div>
+        <span class="panel-tag">GUIDE</span>
+      </div>
+      <div class="help-grid">
+        <div class="help-card">
+          <h4>Driving Controls</h4>
+          <ul>
+            <li><kbd>W</kbd> or <kbd>↑</kbd> : Drive Forward</li>
+            <li><kbd>S</kbd> or <kbd>↓</kbd> : Drive Backward</li>
+            <li><kbd>A</kbd> or <kbd>←</kbd> : Pivot Turn Left</li>
+            <li><kbd>D</kbd> or <kbd>→</kbd> : Pivot Turn Right</li>
+            <li><kbd>SPACE</kbd> or <kbd>ESC</kbd> : Immediate Emergency Stop</li>
+            <li><strong>Key Release</strong> : Halts vehicle automatically</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>Safety Protocols</h4>
+          <ul>
+            <li>Car always powers up in <code>STOP</code> mode.</li>
+            <li>Watchdog shuts motors off if communication drops for 1.5 seconds.</li>
+            <li>Always elevate car wheels off the ground during physical bench testing.</li>
+            <li>Common ground (GND) must connect between Raspberry Pi and L298N.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <span>MECHPORT ROBOTIC CAR &bull; TACTICAL COMMAND CENTER</span>
+        <span>PAIR-PROGRAMMED WITH ANTIGRAVITY</span>
+      </div>
+    </footer>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>
