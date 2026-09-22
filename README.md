@@ -168,11 +168,62 @@ On your Airtel Hotspot network:
 
 ---
 
+---
+
+## Running the Web Dashboard (Laptop Control Center)
+
+The dashboard allows you to control the car with keyboard keys (`W`, `A`, `S`, `D`, `SPACE`), view real-time telemetry, and watch the live ESP32-CAM video stream.
+
+### 1. Start the Raspberry Pi Server
+On the Raspberry Pi (or in mock mode on your laptop):
+```bash
+cd raspberry_pi
+python server.py
+```
+
+### 2. Launch the Web Dashboard
+You can open `dashboard/index.html` directly in any modern browser (Chrome, Edge, Firefox, Safari), or serve it locally:
+```bash
+# From project root
+python -m http.server 8000 --directory dashboard
+```
+Open **`http://localhost:8000`** in your browser.
+
+### 3. Configuring Device IP Addresses in the UI
+You **do not** need to edit code to point the dashboard to your hardware!
+1. Click the **⚙ Settings** button in the top right corner.
+2. Enter your **Raspberry Pi API Base URL** (e.g. `http://192.168.1.100:5000` or `http://127.0.0.1:5000`).
+3. Enter your **ESP32-CAM Stream URL** (e.g. `http://192.168.1.50:81/stream`).
+4. Click **Save & Connect**. Settings are saved in your browser's local storage.
+
+### 4. Driving Controls
+| Key | Action | Description |
+|---|---|---|
+| **W** / **↑** | `FORWARD` | Moves both wheels forward |
+| **S** / **↓** | `BACKWARD` | Moves both wheels backward |
+| **A** / **←** | `LEFT` | Differential pivot turn left |
+| **D** / **→** | `RIGHT` | Differential pivot turn right |
+| **SPACE** / **Esc** | `STOP` | Instant Emergency Stop |
+| *Key Release* | `STOP` | Automatically halts vehicle when movement key is released |
+
+---
+
+## ESP32-CAM Video Streamer Setup
+
+The AI-Thinker ESP32-CAM provides live video streaming over your Airtel hotspot:
+- Firmware Sketch: [esp32_cam/mechport_camera/mechport_camera.ino](file:///c:/Users/Riddhi/OneDrive/%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88/mechport/MechPort/esp32_cam/mechport_camera/mechport_camera.ino)
+- Complete Upload & Hardware Wiring Guide: [esp32_cam/README.md](file:///c:/Users/Riddhi/OneDrive/%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88/mechport/MechPort/esp32_cam/README.md)
+- Credentials Template: [esp32_cam/mechport_camera/credentials.example.h](file:///c:/Users/Riddhi/OneDrive/%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88/mechport/MechPort/esp32_cam/mechport_camera/credentials.example.h)
+
+---
+
 ## Phase Status & Roadmap
 
 - [x] **Phase 1: Project Structure & Centralized Configuration** (Complete)
 - [x] **Phase 2: Safe Motor Control Module with Watchdog & Tests** (Complete)
-- [ ] **Phase 3: Raspberry Pi REST API / Flask Server** (Upcoming)
-- [ ] **Phase 4: Laptop Web Dashboard & Keyboard Controller** (Upcoming)
-- [ ] **Phase 5: ESP32-CAM Live Video Streamer Firmware** (Upcoming)
+- [x] **Phase 3: Raspberry Pi REST API / Flask Server** (Complete)
+- [x] **Phase 4: Laptop Web Dashboard & Keyboard Controller** (Complete)
+- [x] **Phase 5: ESP32-CAM Live Video Streamer Firmware** (Complete)
 - [ ] **Phase 6: End-to-End Integration & System Verification** (Upcoming)
+
+

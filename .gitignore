@@ -223,4 +223,6 @@ __marimo__/
 !.env.example
 secrets.json
 credentials.h
+!credentials.example.h
+
 
