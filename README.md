@@ -104,6 +104,22 @@ MechPort/
 | **ENB** | Right Speed (PWM) | *(Optional)* BCM 13 or 19 | `PIN_ENB` (Leave None if 5V jumper present) |
 | **GND** | Ground Reference | **Raspberry Pi GND** | *Mandatory shared ground connection* |
 
+### Confirmed Sensor GPIO Assignments
+
+| Sensor | Function | Raspberry Pi Pin (BCM) | Physical Status |
+|---|---|---|---|
+| **DHT22** | Temperature & Humidity DATA | **BCM GPIO 4** (`board.D4`) | Connected (Non-fatal failure handling if missing) |
+| **Flame Sensor 1** | Digital Output | **BCM GPIO 24** | Connected & Electrically Verified |
+| **Flame Sensor 2** | Digital Output | **BCM GPIO 25** | Connected & Electrically Verified |
+| **HW-072** | Digital Output | **BCM GPIO 5** | Connected & Electrically Verified |
+| *Ultrasonic (HC-SR04)* | Distance Sensor | *Unassigned* | Reserved for future expansion |
+| *MQ Gas Sensor* | Gas Detection | *Unassigned* | Reserved for future expansion |
+| *Buzzer* | Audible Alarm | *Unassigned* | Reserved for future expansion |
+
+> [!NOTE]
+> **DHT22 Fault Tolerance**: If the DHT22 returns "sensor not found" or checksum errors, `SensorManager` catches the exception and reports `available: false` in the API telemetry without stopping or interrupting the server.
+
+
 > [!IMPORTANT]
 > **No Guessed Pins**: The code initializes with pins as `None`. You must specify your physical BCM pins in `raspberry_pi/config.py` or `.env` before running on hardware.
 

@@ -57,7 +57,16 @@ class TestMechPortAPI(unittest.TestCase):
         self.assertIn("hardware", data)
         self.assertEqual(data["hardware"]["mode"], "MOCK")
         self.assertTrue(data["hardware"]["is_mock"])
-        print("\n[TEST 1 PASSED] GET /api/status verified initial state (STOP, MOCK mode).")
+        # Verify sensors and camera telemetry
+        self.assertIn("sensors", data)
+        self.assertIn("dht22", data["sensors"])
+        self.assertIn("flame_sensor_1", data["sensors"])
+        self.assertIn("flame_sensor_2", data["sensors"])
+        self.assertIn("hw072", data["sensors"])
+        self.assertIn("camera", data)
+        self.assertIn("stream_url", data["camera"])
+        print("\n[TEST 1 PASSED] GET /api/status verified initial state (STOP, MOCK mode, sensors & camera).")
+
 
     def test_02_move_forward(self):
         """Verify POST /api/move FORWARD works."""

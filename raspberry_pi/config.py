@@ -65,6 +65,21 @@ PIN_IN4: Optional[int] = _get_pin_env("PIN_IN4") or None
 PIN_ENB: Optional[int] = _get_pin_env("PIN_ENB") or None
 
 
+# --- Environmental & Safety Sensors (BCM Numbering) ---
+# DHT22 Temperature & Humidity Sensor DATA pin (BCM 4)
+PIN_DHT22: int = _get_pin_env("PIN_DHT22") or 4
+
+# Flame Sensor 1 Digital Output pin (BCM 24)
+PIN_FLAME_1: int = _get_pin_env("PIN_FLAME_1") or 24
+
+# Flame Sensor 2 Digital Output pin (BCM 25)
+PIN_FLAME_2: int = _get_pin_env("PIN_FLAME_2") or 25
+
+# HW-072 Digital Output pin (BCM 5)
+PIN_HW072: int = _get_pin_env("PIN_HW072") or 5
+
+
+
 # ==============================================================================
 # 2. MOTOR SAFETY & PERFORMANCE CONFIGURATION
 # ==============================================================================
@@ -91,6 +106,10 @@ SERVER_HOST: str = os.getenv("RPI_HOST", "0.0.0.0")
 
 # Port for the Raspberry Pi API server
 SERVER_PORT: int = int(os.getenv("RPI_PORT", "5000"))
+
+# ESP32-CAM stream URL (configured from local Airtel hotspot DHCP assignment)
+ESP32_CAM_STREAM_URL: str = os.getenv("ESP32_CAM_STREAM_URL", "http://10.20.64.125/stream")
+
 
 
 # ==============================================================================

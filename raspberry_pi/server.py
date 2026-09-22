@@ -32,9 +32,12 @@ if CURRENT_DIR not in sys.path:
 try:
     import config
     from motor_control import MotorController, get_motor_controller
+    from sensor_manager import SensorManager, get_sensor_manager
 except ImportError:
     from . import config
     from .motor_control import MotorController, get_motor_controller
+    from .sensor_manager import SensorManager, get_sensor_manager
+
 
 # Configure structured logging
 logging.basicConfig(
@@ -65,6 +68,12 @@ VALID_COMMANDS = {
 def get_controller() -> MotorController:
     """Returns the singleton MotorController instance."""
     return get_motor_controller()
+
+
+def get_sensors() -> SensorManager:
+    """Returns the singleton SensorManager instance."""
+    return get_sensor_manager()
+
 
 
 @app.before_request
@@ -100,6 +109,8 @@ def get_status():
     try:
         controller = get_controller()
         motor_status = controller.get_status()
+        sensor_mgr = get_sensors()
+        sensor_status = sensor_mgr.read_all()
 
         response_data: Dict[str, Any] = {
             "server": {
@@ -123,9 +134,14 @@ def get_status():
                 "is_mock": motor_status["is_mock"],
                 "pins": motor_status["pins"],
             },
+            "sensors": sensor_status,
+            "camera": {
+                "stream_url": config.ESP32_CAM_STREAM_URL,
+            },
             "timestamp": time.time(),
         }
         return jsonify(response_data), 200
+
 
     except Exception as err:
         logger.error("Error retrieving status: %s", err, exc_info=True)
@@ -214,13 +230,15 @@ def post_move():
 
 @app.route("/api/shutdown", methods=["POST"])
 def post_shutdown():
-    """Gracefully stops all motors and cleans up GPIO."""
+    """Gracefully stops all motors, cleans up sensors, and releases GPIO."""
     logger.info("Received API shutdown request. Stopping motors and releasing pins...")
     controller = get_controller()
     controller.cleanup()
+    sensor_mgr = get_sensors()
+    sensor_mgr.cleanup()
     return jsonify({
         "status": "success",
-        "message": "Motor controller safely shut down and GPIO resources released."
+        "message": "Motor controller and sensors safely shut down and GPIO resources released."
     }), 200
 
 
@@ -237,6 +255,14 @@ def run_server():
         controller.current_state,
         "MOCK" if controller.is_mock else "PHYSICAL"
     )
+
+    # Pre-initialize sensor manager safely
+    sensor_mgr = get_sensors()
+    logger.info(
+        "SensorManager initialized (Mode: %s)",
+        "MOCK" if sensor_mgr.is_mock else "PHYSICAL"
+    )
+
 
     # Run the Flask app
     app.run(
